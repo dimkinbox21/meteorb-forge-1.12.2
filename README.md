@@ -1,6 +1,7 @@
 # MeteorB (Forge 1.12.2)
 
-Port in progress. Menu and ChestDump run in game; more modules follow.
+Menu, ChestDump, AutoTool and Scaffold run in game. KillAura, AutoEat and
+AutoArmor are still to come.
 
     Minecraft 1.12.2 + Forge 14.23.5.2859
     Instance: C:\Users\dimki\AppData\Roaming\PrismLauncher\instances\1.12.2
