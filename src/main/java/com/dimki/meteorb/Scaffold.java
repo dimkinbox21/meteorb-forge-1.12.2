@@ -310,6 +310,59 @@ public class Scaffold extends Module {
     }
 
     /**
+     * True when clicking this block opens something instead of placing.
+     *
+     * <p>Found by reading the 1.12.2 jar rather than by listing blocks: 34
+     * vanilla classes declare their own {@code onBlockActivated} - chest, ender
+     * chest, shulker box, furnace, hopper, dispenser, workbench, anvil, TNT,
+     * door, lever, button - and each of those answers "used" to the client the
+     * moment it is clicked, so the placement call reports SUCCESS even though no
+     * block went in. That is exactly how Scaffold came to open a chest and
+     * believe it had built.
+     *
+     * <p>A list of names is not the test, though. {@code BlockTrappedChest} is
+     * absent from the jar entirely - a trapped chest is a {@code BlockChest}
+     * carrying a type property - so matching class names would miss it, and
+     * "extends BlockContainer" is both too narrow and too wide: 22 classes
+     * extend it, but the workbench is not one of them while the mob spawner,
+     * end portal and banner are, and those three are not clickable at all.
+     *
+     * <p>The reliable sign is what the block DOES: override activation, AND
+     * either carry an inventory or be able to show the player a screen. Both
+     * halves are needed. Overriding alone rejects ordinary building blocks
+     * correctly, but it would also reject a door or a lever - and a door is
+     * still something to click, since it opens but places nothing in the way
+     * of a block going in.
+     */
+    private static boolean opensGui(net.minecraft.block.state.IBlockState state) {
+        net.minecraft.block.Block block = state.getBlock();
+        boolean hasOwn;
+        try {
+            hasOwn = block.getClass().getDeclaredMethod(
+                    "onBlockActivated", net.minecraft.world.World.class,
+                    net.minecraft.util.math.BlockPos.class,
+                    net.minecraft.block.state.IBlockState.class,
+                    net.minecraft.entity.player.EntityPlayer.class,
+                    net.minecraft.util.EnumHand.class,
+                    net.minecraft.util.EnumFacing.class,
+                    float.class, float.class, float.class) != null;
+        } catch (NoSuchMethodException e) {
+            return false; // no own handler: an ordinary building block
+        }
+        if (!hasOwn) {
+            return false;
+        }
+        // Stores something: every chest, furnace, hopper, dispenser, brewing
+        // stand. Covers the trapped chest, which declares no handler of its own.
+        if (block instanceof net.minecraft.inventory.IInventory) {
+            return true;
+        }
+        // Or shows the player a screen: the workbench, which stores nothing but
+        // still opens a GUI (it is a Block, not a BlockContainer).
+        return block instanceof net.minecraft.block.BlockWorkbench;
+    }
+
+    /**
      * Places into the cell by clicking a solid neighbour with the face that
      * points at the cell. First solid neighbour wins; the held slot is restored
      * whatever happens, so the hotbar is never left on the scaffold block.
@@ -325,6 +378,9 @@ public class Scaffold extends Module {
                 BlockPos pos = new BlockPos(x + n.dx, y + n.dy, z + n.dz);
                 if (!isSolid(minecraft.world, pos)) {
                     continue; // need something to click against
+                }
+                if (opensGui(minecraft.world.getBlockState(pos))) {
+                    continue; // it would open instead of accept a block
                 }
                 if (callUseItemOnBlock(minecraft.playerController,
                         (EntityPlayerSP) player, minecraft.world,
