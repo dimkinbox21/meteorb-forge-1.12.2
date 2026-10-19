@@ -1,0 +1,12 @@
+[
+  {
+    "modid": "meteorb",
+    "name": "MeteorB",
+    "description": "Module menu, toggles and binds",
+    "version": "0.1.0",
+    "mcVersion": "1.12.2",
+    "url": "https://github.com/dimkinbox21",
+    "authorList": ["dimkinbox21"],
+    "credits": "Ported from the 1.7.3 build"
+  }
+]
