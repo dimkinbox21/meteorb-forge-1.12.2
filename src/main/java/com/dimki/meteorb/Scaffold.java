@@ -327,12 +327,13 @@ public class Scaffold extends Module {
      * extend it, but the workbench is not one of them while the mob spawner,
      * end portal and banner are, and those three are not clickable at all.
      *
-     * <p>The reliable sign is what the block DOES: override activation, AND
-     * either carry an inventory or be able to show the player a screen. Both
-     * halves are needed. Overriding alone rejects ordinary building blocks
-     * correctly, but it would also reject a door or a lever - and a door is
-     * still something to click, since it opens but places nothing in the way
-     * of a block going in.
+     * <p>The reliable sign is what the block DOES: override activation AND
+     * either carry a tile entity or be able to show the player a screen. Both
+     * halves are needed. Overriding alone would also reject a door or a lever -
+     * those only flip state, never open a screen, and a block still places
+     * against them. The tile-entity half is what distinguishes a chest from a
+     * door, and it must be the block's tile-entity interface rather than an
+     * inventory test: the block is not its own inventory.
      */
     private static boolean opensGui(net.minecraft.block.state.IBlockState state) {
         net.minecraft.block.Block block = state.getBlock();
@@ -352,13 +353,19 @@ public class Scaffold extends Module {
         if (!hasOwn) {
             return false;
         }
-        // Stores something: every chest, furnace, hopper, dispenser, brewing
-        // stand. Covers the trapped chest, which declares no handler of its own.
-        if (block instanceof net.minecraft.inventory.IInventory) {
+        // Carries a tile entity: chest, trapped chest (same class - the trap is
+        // a property, there is no BlockTrappedChest in the jar), ender chest,
+        // shulker box, furnace, hopper, dispenser, brewing stand, jukebox, note
+        // block. This is what says "container", and it is the right test because
+        // the block itself does NOT hold the inventory - checking
+        // "instanceof IInventory" here was tried first and fails on every
+        // chest, since BlockContainer implements only ITileEntityProvider and
+        // the inventory lives in the tile entity.
+        if (block instanceof net.minecraft.block.ITileEntityProvider) {
             return true;
         }
-        // Or shows the player a screen: the workbench, which stores nothing but
-        // still opens a GUI (it is a Block, not a BlockContainer).
+        // Or shows the player a screen without storing anything: the workbench,
+        // which is a plain Block rather than a BlockContainer.
         return block instanceof net.minecraft.block.BlockWorkbench;
     }
 
