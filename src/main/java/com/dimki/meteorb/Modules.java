@@ -13,12 +13,10 @@ public class Modules {
 
     private final List<Module> modules = new ArrayList<Module>();
 
-    // GUI-only stage: the modules themselves are ported next, one at a time.
-    // This registry keeps the menu and the config working with an empty list,
-    // so adding a module is a single line rather than a build break.
     public final ChestDump chestDump = add(new ChestDump());
     public final AutoTool autoTool = add(new AutoTool());
     public final Scaffold scaffold = add(new Scaffold());
+    public final AutoArmor autoArmor = add(new AutoArmor());
 
     private Modules() {
     }
