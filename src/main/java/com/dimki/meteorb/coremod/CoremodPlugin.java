@@ -33,6 +33,10 @@ import org.objectweb.asm.tree.MethodNode;
  * released (patched) classes carries no Forge call - so an event subscription
  * there would simply never fire. That is why this is still a transformer.
  */
+/**
+ * ...
+ */
+@net.minecraftforge.fml.relauncher.IFMLLoadingPlugin.MCVersion("1.12.2")
 public class CoremodPlugin implements IFMLLoadingPlugin {
 
     /** GuiScreen, the readable name in slash form. */
