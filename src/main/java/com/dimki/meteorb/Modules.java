@@ -18,6 +18,7 @@ public class Modules {
     // so adding a module is a single line rather than a build break.
     public final ChestDump chestDump = add(new ChestDump());
     public final AutoTool autoTool = add(new AutoTool());
+    public final Scaffold scaffold = add(new Scaffold());
 
     private Modules() {
     }

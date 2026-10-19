@@ -1,28 +1,27 @@
-AutoTool on 1.12.2, plus fixes to DeriveMcpJar and the jar manifest
+Scaffold on 1.12.2: bridges gaps and pillars up
 
-AutoTool is ported and confirmed in game: while mining, the best tool from the
-hotbar is held and the previous slot comes back, with the 1.7.3 sword
-exception kept. Two API changes it absorbed: the speed call is now
-getDestroySpeed(ItemStack, IBlockState) rather than getStrVsBlock(ItemStack,
-Block) - the 1.9 block-state rework - and RayTraceResult.Type's constants were
-not renamed, so BLOCK is reached through the enum's own name().
+Scaffold is ported and confirmed in game - the log shows the pillar climbing
+y=80 to y=85 while jump was held, one block placed per level against the
+neighbour above, exactly as on 1.8.
 
-DeriveMcpJar had a real bug, found because AutoTool would not compile. Its
-archive loop skipped every entry containing '$', on the stated grounds that
-nested classes "ride along with their outer class". They do not: this jar
-(like 1.8's) writes each nested class as its own entry, so bhc$a.class stayed
-obfuscated while its outer was already RayTraceResult.class, and javac could
-not resolve the type. The entry is now renamed through the same nested-name
-rule the class visitor uses, so the class is on the classpath under its MCP
-name. The 1.8 project lives with the same bug and works around it with name()
-everywhere; that is worth fixing there too.
+It needed only the placement call reworked. In 1.8 that was
+PlayerControllerMP.func_178890_a(EntityPlayerSP, WorldClient, ItemStack,
+BlockPos, EnumFacing, Vec3), whose name is already known and fixed; in 1.12.2
+it is processRightClickBlock(EntityPlayerSP, WorldClient, BlockPos,
+EnumFacing, Vec3d, EnumHand) - the hand parameter arrived with 1.9 and moved
+everything after the world along by one. So the method is now found by SHAPE
+rather than by name: whichever declared method takes a position, a face and a
+hand and reports a verdict. The first attempt matched on "ItemStack at index
+2", which is 1.8's order, and therefore never found the 1.12.2 method at all -
+NoSuchMethodException in the log. The argument list is rebuilt from whichever
+shape was found, and the result is read the same way: 1.8 answered boolean,
+1.12.2 an EnumActionResult, so a TRUE boolean or anything but FAIL counts.
 
-The jar manifest lost and regained FMLCorePluginContainsFMLMod, and the losing
-was instructive. Forge 14 warns that a coremod and a mod should not share a jar
-and calls the marker "not recommended", so it was dropped - after which the
-transformer still loaded and worked, but @Mod was never discovered: 4 mods
-loaded instead of 5, no module ticked, and the world reported the saved mod as
-missing. The marker is what makes a jar carrying both be scanned for the mod,
-so it is back, with the warning explicitly recorded as cosmetic.
+Two more 1.12.2 changes absorbed: MathHelper.floor_double is now
+MathHelper.floor, and getCollisionBoundingBox takes the block state first.
+
+Diagnostics that were in the port (aim/placeSlot/nbr/result on System.err) are
+removed now that the shape was confirmed; package.cmd had %JAVAC% unset, which
+silently skipped compiling the tools each run, and that is set now.
 
 Co-Authored-By: Claude Code <noreply@anthropic.com>

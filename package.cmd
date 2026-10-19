@@ -1,6 +1,7 @@
 @echo off
 set ROOT=C:\Users\dimki\projects\forge-1.12.2-meteor
 set JAR=C:\tools\jdk8u504-b01\bin\jar.exe
+set JAVAC=C:\tools\jdk8u504-b01\bin\javac.exe
 set JAVA=C:\tools\jdk8u504-b01\bin\java.exe
 cd /d %ROOT%
 if not exist dist\stage mkdir dist\stage

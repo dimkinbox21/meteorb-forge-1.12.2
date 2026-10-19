@@ -177,7 +177,8 @@ public final class DeriveMcpJar implements Opcodes {
                 }
                 interfaces = mapped;
             }
-            super.visit(version, access, name, sig, superName, interfaces);
+            super.visit(version, access, name, DeriveMcpJar.mapSig(sig),
+                    superName, interfaces);
         }
 
         private String mapName(String name) {
