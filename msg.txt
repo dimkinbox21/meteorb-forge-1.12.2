@@ -1,0 +1,23 @@
+ChestDump ported to 1.12.2, dumps the chest on its key
+
+Confirmed in game: one key press moves the 27 inventory slots into an open
+chest and leaves the hotbar, which is the whole point of the module.
+
+Three 1.12.2 changes the port had to absorb, each measured rather than guessed:
+
+  - the click is a ClickType enum, not an int, and its constants did not
+    survive MCP - ClickType.QUICK_MOVE does not compile, so the shift-click
+    is ClickType.values()[1], which the mapping confirms as QUICK_MOVE;
+  - ItemStack.stackSize is private, so the count read is getCount();
+  - GuiScreenEvent.KeyboardInputEvent exists in this Forge but nothing posts
+    it - no class in the Forge jar refers to it and the released
+    GuiScreen.handleKeyboardInput carries no Forge call - so an event
+    subscription there would never fire. The key still goes through the
+    coremod transformer, and both of that hook's 1.8 fixes came with it:
+    Escape is never swallowed, and the suppress value is the key itself
+    rather than 1, which in 1.8 made any key close any screen.
+
+The jar manifest no longer sets FMLCorePluginContainsFMLMod: Forge 14 warns
+against a coremod and a mod sharing one jar, and it is not needed here.
+
+Co-Authored-By: Claude Code <noreply@anthropic.com>

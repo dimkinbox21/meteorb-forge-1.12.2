@@ -1,19 +1,22 @@
 # MeteorB (Forge 1.12.2)
 
-Port in progress. The GUI is running in game; the modules are ported next.
+Port in progress. Menu and ChestDump run in game; more modules follow.
 
     Minecraft 1.12.2 + Forge 14.23.5.2859
     Instance: C:\Users\dimki\AppData\Roaming\PrismLauncher\instances\1.12.2
 
 ## Where it stands
 
-The module menu, its Right Shift bind and the bind capture all work in game:
-the panel draws, left click toggles a row, right click starts a capture,
-Escape cancels, Delete clears, and the conflict warning still fires. States
-and binds persist in `config/meteorb.json`, written on world or game exit.
+The module menu and ChestDump both work in game. The menu's panel draws, left
+click toggles a row, right click starts a bind capture, Escape cancels, Delete
+clears, the conflict warning fires, and states and binds persist in
+`config/meteorb.json` on world or game exit. ChestDump dumps the inventory into
+an open chest on its key, hotbar preserved, and Escape still closes the menu
+and every other screen normally.
 
-The module list is deliberately empty for now - porting a module is one line in
-`Modules.java` rather than a build break.
+ChestDump is registered and enabled by default. Adding a module is one line in
+`Modules.java`; it is no longer necessary to leave the registry empty to keep
+the build working.
 
 ## Build
 
@@ -46,6 +49,13 @@ Everything below was found by compiling or running against 1.12.2, not assumed.
   This is the one that changes ChestDump and AutoArmor when they land.
 * `ItemArmor.armorType` is an `EntityEquipmentSlot` and `toughness` is new.
 * `getCooldownTracker` has no MCP name and is reached by reflection.
+* `ItemStack.stackSize` is private now - `getCount()` is the accessor.
+* `GuiScreenEvent.KeyboardInputEvent` exists but **is not posted** by 1.12.2
+  Forge at all: nothing in the Forge jar refers to it, and the released
+  `GuiScreen.handleKeyboardInput` carries no Forge call. An event subscription
+  there would never fire, so ChestDump's key still goes through a coremod
+  transformer, and both of that transformer's 1.8 fixes (swallowed Escape, and
+  every key being handed back as KEY_ESCAPE) were carried across too.
 
 ## What vanilla does for us now
 

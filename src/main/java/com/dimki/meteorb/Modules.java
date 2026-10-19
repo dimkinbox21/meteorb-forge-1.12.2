@@ -16,6 +16,8 @@ public class Modules {
     // GUI-only stage: the modules themselves are ported next, one at a time.
     // This registry keeps the menu and the config working with an empty list,
     // so adding a module is a single line rather than a build break.
+    public final ChestDump chestDump = add(new ChestDump());
+
     private Modules() {
     }
 

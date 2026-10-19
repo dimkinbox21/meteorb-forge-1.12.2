@@ -13,5 +13,10 @@ if not exist tools\out mkdir tools\out
 cd dist\stage
 %JAR% xf ..\reobf-classes.jar
 cd /d %ROOT%
-%JAR% cf dist\meteorb-0.1.0.jar -C dist\stage .
+REM The coremod is declared through the jar manifest, the way 1.8's was, so
+REM Forge loads the transformer before the mod's own classes.
+echo Manifest-Version: 1.0> dist\stage\MANIFEST_TMP
+echo FMLCorePlugin: com.dimki.meteorb.coremod.CoremodPlugin>> dist\stage\MANIFEST_TMP
+%JAR% cfm dist\meteorb-0.1.0.jar dist\stage\MANIFEST_TMP -C dist\stage .
+
 
