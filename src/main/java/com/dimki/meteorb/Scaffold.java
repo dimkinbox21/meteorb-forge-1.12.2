@@ -335,20 +335,54 @@ public class Scaffold extends Module {
      * door, and it must be the block's tile-entity interface rather than an
      * inventory test: the block is not its own inventory.
      */
+    /**
+     * True when this class declares its own block-activation handler, matched
+     * by SHAPE rather than by name.
+     *
+     * <p>The name cannot be used here, and this is what the earlier versions of
+     * this filter got wrong. The compile-time jar names it onBlockActivated,
+     * but reobfuscation maps it back to Searge for the runtime jar - measured
+     * in reobf-map.txt: {@code BlockChest onBlockActivated func_180639_a}. The
+     * reobfuscator cannot know that a string literal names a method, so
+     * {@code getDeclaredMethod("onBlockActivated", ...)} survives into the
+     * release unchanged and then finds nothing at runtime, throwing
+     * NoSuchMethodException - which the caller catches by answering "not a
+     * GUI", which lets every chest through. The parameter types are no better:
+     * they are remapped too, so the literal class objects do not match either.
+     *
+     * <p>The shape is stable across all of that. An activation handler takes the
+     * world, the position, the state, the player, the hand, the face and three
+     * hit offsets, and answers boolean: nine parameters, the first a World and
+     * the last three floats, is a signature nothing else in the block API has.
+     */
+    private static boolean declaresActivation(Class<?> cls) {
+        for (Method m : cls.getDeclaredMethods()) {
+            Class<?>[] p = m.getParameterTypes();
+            if (p.length != 9) {
+                continue;
+            }
+            if (!World.class.isAssignableFrom(p[0])) {
+                continue; // the world
+            }
+            if (!EntityPlayer.class.isAssignableFrom(p[3])) {
+                continue; // the player, fourth
+            }
+            if (p[6] != float.class || p[7] != float.class
+                    || p[8] != float.class) {
+                continue; // hitX, hitY, hitZ
+            }
+            return m.getReturnType() == boolean.class;
+        }
+        return false;
+    }
+
     private static boolean opensGui(net.minecraft.block.state.IBlockState state) {
         net.minecraft.block.Block block = state.getBlock();
         boolean hasOwn;
         try {
-            hasOwn = block.getClass().getDeclaredMethod(
-                    "onBlockActivated", net.minecraft.world.World.class,
-                    net.minecraft.util.math.BlockPos.class,
-                    net.minecraft.block.state.IBlockState.class,
-                    net.minecraft.entity.player.EntityPlayer.class,
-                    net.minecraft.util.EnumHand.class,
-                    net.minecraft.util.EnumFacing.class,
-                    float.class, float.class, float.class) != null;
-        } catch (NoSuchMethodException e) {
-            return false; // no own handler: an ordinary building block
+            hasOwn = block.getClass().getDeclaredMethods().length > 0 && declaresActivation(block.getClass());
+        } catch (Throwable t) {
+            hasOwn = false;
         }
         if (!hasOwn) {
             return false;
