@@ -1,0 +1,6 @@
+# derived from third-party jars, rebuilt by derive.cmd
+libs/
+# build output
+build/
+out/
+dist/
