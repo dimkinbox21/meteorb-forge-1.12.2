@@ -56,7 +56,7 @@ public class MeteorB {
         Config.installShutdownHook();
 
         org.apache.logging.log4j.LogManager.getLogger(MODID).info(
-                "MeteorB loaded! menu on RightShift - modules are ported next");
+                "MeteorB loaded! menu on RightShift - ChestDump and AutoTool so far");
     }
 
     /**

@@ -44,6 +44,31 @@ public final class DeriveMcpJar implements Opcodes {
     /** obfuscated class name -> readable class name. */
     private static final Map<String, String> classMap = new HashMap<>();
 
+    /**
+     * The same nested-name rule the class visitor uses, for archive entries.
+     *
+     * <p>An entry named {@code Outer$Inner} maps its outer prefix and keeps the
+     * suffix, which is what makes {@code bhc$a} land as
+     * {@code RayTraceResult$a} instead of staying unreadable.
+     */
+    private static String mapNameGlobal(String name) {
+        if (name == null || name.isEmpty()) {
+            return name;
+        }
+        String target = classMap.get(name);
+        if (target != null) {
+            return target;
+        }
+        int cut = name.indexOf('$');
+        if (cut > 0) {
+            String mapped = classMap.get(name.substring(0, cut));
+            if (mapped != null) {
+                return mapped + name.substring(cut);
+            }
+        }
+        return null;
+    }
+
     /** (owner, name) -> readable owner + Searge name, for fields. */
     private static final Map<String, String[]> fieldMap = new HashMap<>();
 
@@ -79,9 +104,12 @@ public final class DeriveMcpJar implements Opcodes {
                 byte[] data = readAll(z.getInputStream(ze));
                 String name = ze.getName();
 
-                // Only top-level classes have an entry name to rewrite; nested
-                // ones (Outer$Inner) ride along with their outer class.
-                if (!name.endsWith(".class") || name.indexOf('$') >= 0) {
+                // Nested entries (Outer$Inner) are separate archive entries in
+                // this jar, not riding along with their outer class: leaving
+                // them obfuscated leaves javac unable to resolve the type. In
+                // 1.8 that cost a fallback to name() everywhere; the entry is
+                // renamed here instead, so the class compiles like any other.
+                if (!name.endsWith(".class")) {
                     zos.putNextEntry(new ZipEntry(name));
                     zos.write(data);
                     zos.closeEntry();
@@ -89,7 +117,7 @@ public final class DeriveMcpJar implements Opcodes {
                     continue;
                 }
                 String obf = name.substring(0, name.length() - ".class".length());
-                String readable = classMap.get(obf);
+                String readable = mapNameGlobal(obf);
                 if (readable == null) {
                     zos.putNextEntry(new ZipEntry(name));
                     zos.write(data);

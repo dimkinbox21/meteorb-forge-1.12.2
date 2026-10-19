@@ -1,23 +1,28 @@
-ChestDump ported to 1.12.2, dumps the chest on its key
+AutoTool on 1.12.2, plus fixes to DeriveMcpJar and the jar manifest
 
-Confirmed in game: one key press moves the 27 inventory slots into an open
-chest and leaves the hotbar, which is the whole point of the module.
+AutoTool is ported and confirmed in game: while mining, the best tool from the
+hotbar is held and the previous slot comes back, with the 1.7.3 sword
+exception kept. Two API changes it absorbed: the speed call is now
+getDestroySpeed(ItemStack, IBlockState) rather than getStrVsBlock(ItemStack,
+Block) - the 1.9 block-state rework - and RayTraceResult.Type's constants were
+not renamed, so BLOCK is reached through the enum's own name().
 
-Three 1.12.2 changes the port had to absorb, each measured rather than guessed:
+DeriveMcpJar had a real bug, found because AutoTool would not compile. Its
+archive loop skipped every entry containing '$', on the stated grounds that
+nested classes "ride along with their outer class". They do not: this jar
+(like 1.8's) writes each nested class as its own entry, so bhc$a.class stayed
+obfuscated while its outer was already RayTraceResult.class, and javac could
+not resolve the type. The entry is now renamed through the same nested-name
+rule the class visitor uses, so the class is on the classpath under its MCP
+name. The 1.8 project lives with the same bug and works around it with name()
+everywhere; that is worth fixing there too.
 
-  - the click is a ClickType enum, not an int, and its constants did not
-    survive MCP - ClickType.QUICK_MOVE does not compile, so the shift-click
-    is ClickType.values()[1], which the mapping confirms as QUICK_MOVE;
-  - ItemStack.stackSize is private, so the count read is getCount();
-  - GuiScreenEvent.KeyboardInputEvent exists in this Forge but nothing posts
-    it - no class in the Forge jar refers to it and the released
-    GuiScreen.handleKeyboardInput carries no Forge call - so an event
-    subscription there would never fire. The key still goes through the
-    coremod transformer, and both of that hook's 1.8 fixes came with it:
-    Escape is never swallowed, and the suppress value is the key itself
-    rather than 1, which in 1.8 made any key close any screen.
-
-The jar manifest no longer sets FMLCorePluginContainsFMLMod: Forge 14 warns
-against a coremod and a mod sharing one jar, and it is not needed here.
+The jar manifest lost and regained FMLCorePluginContainsFMLMod, and the losing
+was instructive. Forge 14 warns that a coremod and a mod should not share a jar
+and calls the marker "not recommended", so it was dropped - after which the
+transformer still loaded and worked, but @Mod was never discovered: 4 mods
+loaded instead of 5, no module ticked, and the world reported the saved mod as
+missing. The marker is what makes a jar carrying both be scanned for the mod,
+so it is back, with the warning explicitly recorded as cosmetic.
 
 Co-Authored-By: Claude Code <noreply@anthropic.com>
