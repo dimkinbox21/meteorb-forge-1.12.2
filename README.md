@@ -1,6 +1,7 @@
 # MeteorB (Forge 1.12.2)
 
-All eight modules are ported and confirmed in game.
+All six modules are ported and confirmed in game. AutoJump is absent on
+purpose: vanilla grew that option in 1.9, so a port of it would be a downgrade.
 
     Minecraft 1.12.2 + Forge 14.23.5.2859
     Instance: C:\Users\dimki\AppData\Roaming\PrismLauncher\instances\1.12.2
