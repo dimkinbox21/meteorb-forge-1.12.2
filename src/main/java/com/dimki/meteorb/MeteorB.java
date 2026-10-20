@@ -16,7 +16,17 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * on Forge, so the AutoJump hook is a coremod class transformer
  * (CoremodPlugin) and everything else is driven from Forge events.
  */
-@Mod(modid = MeteorB.MODID, version = MeteorB.VERSION, clientSideOnly = true,
+// Deliberately NOT clientSideOnly. That flag makes Forge drop the mod on a
+// dedicated server ("Disabling mod {} it is client side only."), and this mod
+// has to load on a server: every packet it sends is an ordinary inventory or
+// attack packet, so a server that also has the jar must accept it.
+//
+// What makes it a *client* mod in the sense that matters is the runtime guard in
+// init() - it returns unless the side is CLIENT - plus the fact that nothing
+// here is ever driven by anything but a client tick. So: stands on a client,
+// works across a server, cannot be installed or configured from the server
+// side.
+@Mod(modid = MeteorB.MODID, version = MeteorB.VERSION,
         acceptableRemoteVersions = "*")
 public class MeteorB {
     public static final String MODID = "meteorb";
