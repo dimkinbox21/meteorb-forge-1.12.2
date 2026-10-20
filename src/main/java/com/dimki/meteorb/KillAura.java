@@ -13,10 +13,8 @@ import net.minecraft.entity.monster.EntitySlime;
 import net.minecraft.entity.monster.EntitySpider;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.InventoryPlayer;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.CooldownTracker;
 
 /**
  * KillAura + AutoWeapon, as on the 1.8 build.
@@ -52,6 +50,15 @@ public class KillAura extends Module {
 
     /** Attack range, just below the vanilla reach of 4.0. */
     private static final double RANGE = 3.9;
+
+    /**
+     * How charged a swing must be before it is thrown.
+     *
+     * <p>Vanilla reaches full strength at 1.0, and its own display shows the
+     * crosshair "ready" well before that; 0.9 keeps almost all the damage while
+     * still waiting out the charge, which is the whole point.
+     */
+    private static final float CHARGE_THRESHOLD = 0.9f;
 
     private static final int HOTBAR_SIZE = 9;
 
@@ -166,23 +173,27 @@ public class KillAura extends Module {
     }
 
     /**
-     * True when the current weapon's swing is charged enough to be worth it.
+     * True when the player's swing is charged enough to be worth throwing.
      *
-     * <p>Vanilla's own threshold for a full-strength hit is a strength near 1;
-     * anything well under that leaves damage on the table and resets the
-     * cooldown, which a spammed aura would do every other tick.
+     * <p>Measured, not assumed: the <em>player's</em> attack charge does not
+     * live in {@code CooldownTracker}. That class is shared with mobs - its only
+     * {@code setCooldown} callers in this jar are {@code EntityMob} and
+     * {@code NetHandlerPlayClient} - so for a player {@code hasCooldown(item)}
+     * is always false and a gate built on it never waits. The charge is a plain
+     * counter on {@code EntityPlayer} that {@code onLivingUpdate} increments and
+     * {@code resetCooldown()} zeroes after every swing, which is exactly what
+     * {@code getCooledAttackStrength} reports as a 0..1 strength.
+     *
+     * <p>So the wait is a direct strength test. Below the threshold a hit does a
+     * fraction of its damage and turns the counter back to zero, which is why
+     * mashing is worse than patience: three half-charged hits lose to one full
+     * one and leave the counter empty.
      */
     private static boolean isCharged(EntityPlayer player, ItemStack stack) {
-        CooldownTracker tracker = player.getCooldownTracker();
-        if (tracker == null) {
-            return true; // no tracker: nothing to wait for
+        if (player.getCooldownPeriod() <= 0.0f) {
+            return true; // no cooldown on this weapon
         }
-        Item item = stack == null ? null : stack.getItem();
-        if (item == null || !tracker.hasCooldown(item)) {
-            return true; // not cooling down, or a bare hand
-        }
-        float strength = player.getCooledAttackStrength(0.5f);
-        return strength >= 0.95f;
+        return player.getCooledAttackStrength(0.5f) >= CHARGE_THRESHOLD;
     }
 
     /** Gives the player's own slot back once the fight is over. */
