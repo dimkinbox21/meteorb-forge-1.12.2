@@ -16,7 +16,8 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  * on Forge, so the AutoJump hook is a coremod class transformer
  * (CoremodPlugin) and everything else is driven from Forge events.
  */
-@Mod(modid = MeteorB.MODID, version = MeteorB.VERSION, acceptableRemoteVersions = "*")
+@Mod(modid = MeteorB.MODID, version = MeteorB.VERSION, clientSideOnly = true,
+        acceptableRemoteVersions = "*")
 public class MeteorB {
     public static final String MODID = "meteorb";
     public static final String VERSION = "0.1.0";
@@ -34,6 +35,19 @@ public class MeteorB {
 
     @EventHandler
     public void init(FMLInitializationEvent event) {
+        // Client only. Forge runs this on BOTH sides, and everything below
+        // reaches classes that only exist meaningfully on a client:
+        // BindManager.registerKeybind() touches GameSettings and creates a
+        // KeyBinding, and the tick bridge calls Minecraft.getMinecraft(). On a
+        // dedicated server those are dead weight at best.
+        //
+        // A @SideOnly annotation here was deliberately avoided: on an event
+        // handler Forge's behaviour is not the simple "stripped on the wrong
+        // side" that it is on an ordinary method, so the reliable form is a
+        // plain runtime guard on the event's own side.
+        if (!event.getSide().isClient()) {
+            return;
+        }
         // Only the client side has a player and a GUI. Both buses, the same
         // way for both handlers: registering on one alone was silently dropped.
         net.minecraftforge.fml.common.FMLCommonHandler.instance().bus()
