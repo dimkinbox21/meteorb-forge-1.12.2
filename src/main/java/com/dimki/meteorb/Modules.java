@@ -17,6 +17,7 @@ public class Modules {
     public final AutoTool autoTool = add(new AutoTool());
     public final Scaffold scaffold = add(new Scaffold());
     public final AutoArmor autoArmor = add(new AutoArmor());
+    public final KillAura killAura = add(new KillAura());
 
     private Modules() {
     }
