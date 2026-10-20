@@ -120,7 +120,28 @@ public class AutoArmor extends Module {
                 continue;
             }
             ItemArmor armor = (ItemArmor) stack.getItem();
-            if (armor.armorType.getSlotIndex() != armorIndex) {
+            // Two numbering systems meet here and they are OFFSET, not merely
+            // reversed - this is what made the module do nothing.
+            //
+            // armorIndex is the CONTAINER's: ContainerPlayer builds its four
+            // armour slots from VALID_EQUIPMENT_SLOTS = {HEAD, CHEST, LEGS,
+            // FEET}, so container 0 is the head, 1 the chest, 2 the legs, 3 the
+            // feet.
+            //
+            // EntityEquipmentSlot.getSlotIndex() is the INVENTORY's, and it is
+            // NOT 0..3 in that order: measured in game, FEET reports 1, LEGS 2,
+            // CHEST 3 and HEAD 4 - the four armour indices are pushed up by
+            // one because MAINHAND takes 0 and OFFHAND takes 5. So the
+            // container index is 4 - slotIndex.
+            //
+            // Comparing getSlotIndex() against armorIndex directly - the
+            // obvious port, and what shipped first - made every piece off by
+            // one: the chestplate (slotIndex 3) read as container 3, the FEET
+            // slot, so a chestplate was picked for the feet and the feet for
+            // the legs. The debug log is what exposed it: CHEST with
+            // slotIndex=3 being considered while the loop was on container 0,
+            // then click2 returning empty because the head slot refused it.
+            if (4 - armor.armorType.getSlotIndex() != armorIndex) {
                 continue;
             }
             int score = scoreOf(stack, armorIndex);
