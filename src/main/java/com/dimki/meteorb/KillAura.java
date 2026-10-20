@@ -68,6 +68,19 @@ public class KillAura extends Module {
     private int restoreSlot = -1;
 
     /**
+     * True while KillAura has taken the hotbar over for a weapon.
+     *
+     * <p>AutoEat asks this before moving the held slot: two modules writing
+     * {@code inventory.currentItem} in the same tick overwrite each other's
+     * saved slot and leave the bar flipping between them. KillAura wins,
+     * because a fight cannot wait on a meal - so AutoEat stands down and eats
+     * after the target is gone.
+     */
+    public boolean isHoldingSlot() {
+        return restoreSlot >= 0;
+    }
+
+    /**
      * World time at which each enderman's screaming flag was last seen raised,
      * and the tick it first read raised, by entity id.
      *

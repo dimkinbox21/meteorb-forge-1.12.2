@@ -18,6 +18,7 @@ public class Modules {
     public final Scaffold scaffold = add(new Scaffold());
     public final AutoArmor autoArmor = add(new AutoArmor());
     public final KillAura killAura = add(new KillAura());
+    public final AutoEat autoEat = add(new AutoEat());
 
     private Modules() {
     }
