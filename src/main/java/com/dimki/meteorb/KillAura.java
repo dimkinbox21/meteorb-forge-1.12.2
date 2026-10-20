@@ -242,6 +242,15 @@ public class KillAura extends Module {
         // entityToAttack is never networked. Treated as an ordinary hostile
         // except for the light gate: a spider cannot START a fight in the
         // light, but one it already has does not end when the light arrives.
+        // Spiders: the client cannot see their target, so neither "neutral in
+        // daylight" nor "already hunting" is a test the client can apply.
+        // Measured in a lit cave at light 15: a spider that had been hit had
+        // getAITarget() == null the whole time while it fought back, because
+        // entityToAttack is never networked. So the rule is the two halves
+        // vanilla's own AI applies, both readable from here: provocation first,
+        // then the light gate that decides who may START a fight. A spider left
+        // alone in the light is left alone; one that has visibly taken damage is
+        // always a target, because a running fight survives any brightness.
         if (e instanceof EntitySpider) {
             EntityLivingBase lb = (EntityLivingBase) e;
             if (lb.hurtTime > 0 || lb.getHealth() < lb.getMaxHealth()) {
